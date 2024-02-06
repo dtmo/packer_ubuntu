@@ -1,0 +1,35 @@
+#cloud-config
+
+# Based on: https://github.com/canonical/autoinstall-desktop
+
+autoinstall:
+  version: 1
+  early-commands:
+    - systemctl stop ssh
+  locale: '${guest_locale}'
+  refresh-installer:
+    update: true
+  keyboard:
+    layout: '${guest_keyboard_layout}'
+  storage:
+    layout:
+      name: direct
+  identity:
+    hostname: ubuntu-workstation
+    username: '${username}'
+    password: '${bcrypt(password)}'
+  ssh:
+    install-server: true
+    allow-pw: true
+  # This adds the default ubuntu-desktop packages to the system.
+  # Any desired additional packages may also be listed here.
+  packages:
+    - ubuntu-desktop
+    # Packages required to build VirtualBox Guest Additions kernel modules
+    - bzip2
+    - gcc
+    - make
+    - perl
+  timezone: '${guest_timezone}'
+  updates: all
+  shutdown: reboot
