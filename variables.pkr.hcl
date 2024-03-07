@@ -1,178 +1,257 @@
-## VM Configuration
+# Qemu Specific Configuration
 
-variable "chipset" {
+variable "iso_skip_cache" {
+  type        = bool
+  description = "Use iso from provided url. Qemu must support curl block device. This defaults to false."
+  default     = null
+}
+
+variable "accelerator" {
   type        = string
-  description = "The chipset to be used: PIIX3 or ICH9. When set to piix3, the firmare is PIIX3. This is the default. When set to ich9, the firmare is ICH9."
+  description = "The accelerator type to use when running the VM. This may be none, kvm, tcg, hax, hvf, whpx, or xen. The appropriate software must have already been installed on your build machine to use the accelerator you specified. When no accelerator is specified, Packer will try to use kvm if it is available but will default to tcg otherwise."
+  default     = null
+}
+
+variable "disk_additional_size" {
+  type        = list(string)
+  description = "Additional disks to create. Uses vm_name as the disk name template and appends -# where # is the position in the array. # starts at 1 since 0 is the default disk. Each string represents the disk image size in bytes. Optional suffixes 'k' or 'K' (kilobyte, 1024), 'M' (megabyte, 1024k), 'G' (gigabyte, 1024M), 'T' (terabyte, 1024G), 'P' (petabyte, 1024T) and 'E' (exabyte, 1024P) are supported. 'b' is ignored. Per qemu-img documentation. Each additional disk uses the same disk parameters as the default disk. Unset by default."
   default     = null
 }
 
 variable "firmware" {
   type        = string
-  description = "The firwmware to be used: BIOS or EFI. When set to bios, the firmware is BIOS. This is the default. When set to efi, the firmare is EFI."
+  description = "The firmware file to be used by QEMU. If unset, QEMU will load its default firmware. Also see the QEMU documentation."
   default     = null
 }
 
-variable "nested_virt" {
+variable "use_pflash" {
   type        = bool
-  description = "Nested virtualization: false or true. When set to true, nested virtualisation (VT-x/AMD-V) is enabled. When set to false, nested virtualisation is disabled. This is the default."
+  description = "If a firmware file option was provided, this option can be used to change how qemu will get it. If false (the default), then the firmware is provided through the -bios option, but if true, a pflash drive will be used instead."
   default     = null
 }
 
-variable "rtc_time_base" {
+variable "disk_interface" {
   type        = string
-  description = "RTC time base: UTC or local. When set to \"UTC\", the RTC is set as UTC time. When set to \"local\", the RTC is set as local time. This is the default."
+  description = "The interface to use for the disk. Allowed values include any of ide, sata, scsi, virtio or virtio-scsi^*. Note also that any boot commands or kickstart type scripts must have proper adjustments for resulting device names. The Qemu builder uses virtio by default."
   default     = null
 }
 
 variable "disk_size" {
+  type        = string
+  description = "The size in bytes of the hard disk of the VM. Suffix with the first letter of common byte types. Use \"k\" or \"K\" for kilobytes, \"M\" for megabytes, G for gigabytes, and T for terabytes. If no value is provided for disk_size, Packer uses a default of 40960M (40 GB). If a disk_size number is provided with no units, Packer will default to Megabytes."
+  default     = null
+}
+
+variable "skip_resize_disk" {
+  type        = bool
+  description = "Packer resizes the QCOW2 image using qemu-img resize. Set this option to true to disable resizing. Defaults to false."
+  default     = null
+}
+
+variable "disk_cache" {
+  type        = string
+  description = "The cache mode to use for disk. Allowed values include any of writethrough, writeback, none, unsafe or directsync. By default, this is set to writeback."
+  default     = null
+}
+
+variable "disk_discard" {
+  type        = string
+  description = "The discard mode to use for disk. Allowed values include any of unmap or ignore. By default, this is set to ignore."
+  default     = null
+}
+
+variable "disk_detect_zeroes" {
+  type        = string
+  description = "The detect-zeroes mode to use for disk. Allowed values include any of unmap, on or off. Defaults to off. When the value is \"off\" we don't set the flag in the qemu command, so that Packer still works with old versions of QEMU that don't have this option."
+  default     = null
+}
+
+variable "skip_compaction" {
+  type        = bool
+  description = "Packer compacts the QCOW2 image using qemu-img convert. Set this option to true to disable compacting. Defaults to false."
+  default     = null
+}
+
+variable "disk_compression" {
+  type        = bool
+  description = "Apply compression to the QCOW2 disk file using qemu-img convert. Defaults to false."
+  default     = null
+}
+
+variable "format" {
+  type        = string
+  description = "Either qcow2 or raw, this specifies the output format of the virtual machine image. This defaults to qcow2. Due to a long-standing bug with qemu-img convert on OSX, sometimes the qemu-img convert call will create a corrupted image. If this is an issue for you, make sure that the the output format matches the input file's format, and Packer will perform a simple copy operation instead. See https://bugs.launchpad.net/qemu/+bug/1776920 for more details."
+  default     = null
+}
+
+variable "headless" {
+  type        = bool
+  description = "Packer defaults to building QEMU virtual machines by launching a GUI that shows the console of the machine being built. When this value is set to true, the machine will start without a console."
+  default     = null
+}
+
+variable "disk_image" {
+  type        = bool
+  description = "Packer defaults to building from an ISO file, this parameter controls whether the ISO URL supplied is actually a bootable QEMU image. When this value is set to true, the machine will either clone the source or use it as a backing file (if use_backing_file is true); then, it will resize the image according to disk_size and boot it."
+  default     = null
+}
+
+variable "use_backing_file" {
+  type        = bool
+  description = "Only applicable when disk_image is true and format is qcow2, set this option to true to create a new QCOW2 file that uses the file located at iso_url as a backing file. The new file will only contain blocks that have changed compared to the backing file, so enabling this option can significantly reduce disk usage. If true, Packer will force the skip_compaction also to be true as well to skip disk conversion which would render the backing file feature useless."
+  default     = null
+}
+
+variable "machine_type" {
+  type        = string
+  description = "The type of machine emulation to use. Run your qemu binary with the flags -machine help to list available types for your system. This defaults to pc."
+  default     = null
+}
+
+variable "memory" {
   type        = number
-  description = "The size, in megabytes, of the hard disk to create for the VM. By default, this is 40000 (about 40 GB)."
+  description = "The amount of memory to use when building the VM in megabytes. This defaults to 512 megabytes."
   default     = null
 }
 
-variable "nic_type" {
+variable "net_device" {
   type        = string
-  description = "The NIC type to be used for the network interfaces. When set to 82540EM, the NICs are Intel PRO/1000 MT Desktop (82540EM). This is the default. When set to 82543GC, the NICs are Intel PRO/1000 T Server (82543GC). When set to 82545EM, the NICs are Intel PRO/1000 MT Server (82545EM). When set to Am79C970A, the NICs are AMD PCNet-PCI II network card (Am79C970A). When set to Am79C973, the NICs are AMD PCNet-FAST III network card (Am79C973). When set to Am79C960, the NICs are AMD PCnet-ISA/NE2100 (Am79C960). When set to virtio, the NICs are VirtIO."
+  description = "The driver to use for the network interface. Allowed values ne2k_pci, i82551, i82557b, i82559er, rtl8139, e1000, pcnet, virtio, virtio-net, virtio-net-pci, usb-net, i82559a, i82559b, i82559c, i82550, i82562, i82557a, i82557c, i82801, vmxnet3, i82558a or i82558b. The Qemu builder uses virtio-net by default."
   default     = null
 }
 
-variable "audio_controller" {
+variable "net_bridge" {
   type        = string
-  description = "The audio controller type to be used. When set to ac97, the audio controller is ICH AC97. This is the default. When set to hda, the audio controller is Intel HD Audio. When set to sb16, the audio controller is SoundBlaster 16."
+  description = "Connects the network to this bridge instead of using the user mode networking."
   default     = null
 }
 
-variable "gfx_controller" {
+variable "output_directory" {
   type        = string
-  description = "The graphics controller type to be used. When set to vboxvga, the graphics controller is VirtualBox VGA. This is the default. When set to vboxsvga, the graphics controller is VirtualBox SVGA. When set to vmsvga, the graphics controller is VMware SVGA. When set to none, the graphics controller is disabled."
+  description = "This is the path to the directory where the resulting virtual machine will be created. This may be relative or absolute. If relative, the path is relative to the working directory when packer is executed. This directory must not exist or be empty prior to running the builder. By default this is output-BUILDNAME where \"BUILDNAME\" is the name of the build."
   default     = null
 }
 
-variable "gfx_vram_size" {
+variable "qemuargs" {
+  type        = list(list(string))
+  description = "Allows complete control over the qemu command line (though not qemu-img). Each array of strings makes up a command line switch that overrides matching default switch/value pairs. Any value specified as an empty string is ignored. All values after the switch are concatenated with no separator."
+  default     = null
+}
+
+variable "qemu_img_args" {
+  type        = map(list(string))
+  description = "A map of custom arguments to pass to qemu-img commands, where the key is the subcommand, and the values are lists of strings for each flag."
+  default     = null
+}
+
+variable "qemu_binary" {
+  type        = string
+  description = "The name of the Qemu binary to look for. This defaults to qemu-system-x86_64, but may need to be changed for some platforms. For example qemu-kvm, or qemu-system-i386 may be a better choice for some systems."
+  default     = null
+}
+
+variable "qmp_enable" {
+  type        = bool
+  description = "Enable QMP socket. Location is specified by qmp_socket_path. Defaults to false."
+  default     = null
+}
+
+variable "qmp_socket_path" {
+  type        = string
+  description = "QMP Socket Path when qmp_enable is true. Defaults to output_directory/vm_name.monitor."
+  default     = null
+}
+
+variable "use_default_display" {
+  type        = bool
+  description = "If true, do not pass a -display option to qemu, allowing it to choose the default. This may be needed when running under macOS, and getting errors about sdl not being available."
+  default     = null
+}
+
+variable "vga" {
+  type        = string
+  description = "The type of VGA card to emulate. If undefined, this will not be included in the command-line, and the default qemu value for the emulated machine will be picked."
+  default     = null
+}
+
+variable "display" {
+  type        = string
+  description = "What QEMU -display option to use. Defaults to gtk, use none to not pass the -display option allowing QEMU to choose the default. This may be needed when running under macOS, and getting errors about sdl not being available."
+  default     = null
+}
+
+variable "vnc_bind_address" {
+  type        = string
+  description = "The IP address that should be binded to for VNC. By default packer will use 127.0.0.1 for this. If you wish to bind to all interfaces use 0.0.0.0."
+  default     = null
+}
+
+variable "vnc_use_password" {
+  type        = bool
+  description = "Whether or not to set a password on the VNC server. This option automatically enables the QMP socket. See qmp_socket_path. Defaults to false."
+  default     = null
+}
+
+variable "vnc_port_min" {
   type        = number
-  description = "The VRAM size to be used. By default, this is 4 MiB."
+  description = "The minimum and maximum port to use for VNC access to the virtual machine. The builder uses VNC to type the initial boot_command. Because Packer generally runs in parallel, Packer uses a randomly chosen port in this range that appears available. By default this is 5900 to 6000. The minimum and maximum ports are inclusive. The minimum port cannot be set below 5900 due to a quirk in how QEMU parses vnc display address."
   default     = null
 }
 
-variable "gfx_accelerate_3d" {
-  type        = bool
-  description = "3D acceleration: true or false. When set to true, 3D acceleration is enabled. When set to false, 3D acceleration is disabled. This is the default."
-  default     = null
-}
-
-variable "gfx_efi_resolution" {
-  type        = string
-  description = "Screen resolution in EFI mode: WIDTHxHEIGHT. When set to WIDTHxHEIGHT, it provides the given width and height as screen resolution to EFI, for example 1920x1080 for Full-HD resolution. By default, no screen resolution is set. Note, that this option only affects EFI boot, not the (default) BIOS boot."
-  default     = null
-}
-
-variable "hard_drive_discard" {
-  type        = bool
-  description = "When this value is set to true, a VDI image will be shrunk in response to the trim command from the guest OS. The size of the cleared area must be at least 1MB. Also set hard_drive_nonrotational to true to enable TRIM support."
-  default     = null
-}
-
-variable "hard_drive_interface" {
-  type        = string
-  description = "The type of controller that the primary hard drive is attached to, defaults to ide. When set to sata, the drive is attached to an AHCI SATA controller. When set to scsi, the drive is attached to an LsiLogic SCSI controller. When set to pcie, the drive is attached to an NVMe controller. When set to virtio, the drive is attached to a VirtIO controller. Please note that when you use \"pcie\", you'll need to have Virtualbox 6, install an extension pack and you will need to enable EFI mode for nvme to work"
-  default     = null
-}
-
-variable "sata_port_count" {
+variable "vnc_port_max" {
   type        = number
-  description = "The number of ports available on any SATA controller created, defaults to 1. VirtualBox supports up to 30 ports on a maximum of 1 SATA controller. Increasing this value can be useful if you want to attach additional drives."
-  default     = null
-}
-
-variable "nvme_port_count" {
-  type        = number
-  description = "The number of ports available on any NVMe controller created, defaults to 1. VirtualBox supports up to 255 ports on a maximum of 1 NVMe controller. Increasing this value can be useful if you want to attach additional drives."
-  default     = null
-}
-
-variable "hard_drive_nonrotational" {
-  type        = bool
-  description = "Forces some guests (i.e. Windows 7+) to treat disks as SSDs and stops them from performing disk fragmentation. Also set hard_drive_discard to true to enable TRIM support."
-  default     = null
-}
-
-variable "iso_interface" {
-  type        = string
-  description = "The type of controller that the ISO is attached to, defaults to ide. When set to sata, the drive is attached to an AHCI SATA controller. When set to virtio, the drive is attached to a VirtIO controller."
-  default     = null
-}
-
-variable "disk_additional_size" {
-  type        = list(number)
-  description = "Additional disks to create. Uses vm_name as the disk name template and appends -# where # is the position in the array. # starts at 1 since 0 is the default disk. Each value represents the disk image size in MiB. Each additional disk uses the same disk parameters as the default disk. Unset by default."
-  default     = null
-}
-
-variable "keep_registered" {
-  type        = bool
-  description = "Set this to true if you would like to keep the VM registered with virtualbox. Defaults to false."
-  default     = null
-}
-
-variable "skip_export" {
-  type        = bool
-  description = "Defaults to false. When enabled, Packer will not export the VM. Useful if the build output is not the resultant image, but created inside the VM."
+  description = "VNC Port Max"
   default     = null
 }
 
 variable "vm_name" {
   type        = string
-  description = "This is the name of the OVF file for the new virtual machine, without the file extension. By default this is packer-BUILDNAME, where \"BUILDNAME\" is the name of the build."
+  description = "This is the name of the image (QCOW2 or IMG) file for the new virtual machine. By default this is packer-BUILDNAME, where \"BUILDNAME\" is the name of the build. Currently, no file extension will be used unless it is specified in this option."
   default     = null
 }
 
-variable "virtualbox_version_file" {
+variable "cdrom_interface" {
   type        = string
-  description = "The path within the virtual machine to upload a file that contains the VirtualBox version that was used to create the machine. This information can be useful for provisioning. By default this is .vbox_version, which will generally be upload it into the home directory. Set to an empty string to skip uploading this file, which can be useful when using the none communicator."
+  description = "The interface to use for the CDROM device which contains the ISO image. Allowed values include any of ide, scsi, virtio or virtio-scsi. The Qemu builder uses virtio by default. Some ARM64 images require virtio-scsi."
   default     = null
 }
 
-variable "bundle_iso" {
+variable "vtpm" {
   type        = bool
-  description = "Defaults to false. When enabled, Packer includes any attached ISO disc devices into the final virtual machine. Useful for some live distributions that require installation media to continue to be attached after installation."
+  description = "Use a virtual (emulated) TPM device to expose to the VM."
   default     = null
 }
 
-variable "guest_additions_mode" {
+variable "use_tpm1" {
+  type        = bool
+  description = "Use version 1.2 of the TPM specification for the emulated TPM."
+  default     = null
+}
+
+variable "tpm_device_type" {
   type        = string
-  description = "The method by which guest additions are made available to the guest for installation. Valid options are upload, attach, or disable. If the mode is attach the guest additions ISO will be attached as a CD device to the virtual machine. If the mode is upload the guest additions ISO will be uploaded to the path specified by guest_additions_path. The default value is upload. If disable is used, guest additions won't be downloaded, either."
+  description = "The TPM device type to inject in the qemu command-line"
   default     = null
 }
 
-variable "guest_additions_interface" {
+
+variable "boot_steps" {
+  type        = list(list(string))
+  description = "This is an array of tuples of boot commands, to type when the virtual machine is booted. The first element of the tuple is the actual boot command. The second element of the tuple, which is optional, is a description of what the boot command does. This is intended to be used for interactive installers that requires many commands to complete the installation. Both the command and the description will be printed when logging is enabled. When debug mode is enabled Packer will pause after typing each boot command. This will make it easier to follow along the installation process and make sure the Packer and the installer are in sync. boot_steps and boot_commands are mutually exclusive."
+  default     = null
+}
+
+variable "cpu_model" {
   type        = string
-  description = "The interface type to use to mount guest additions when guest_additions_mode is set to attach. Will default to the value set in iso_interface, if iso_interface is set. Will default to \"ide\", if iso_interface is not set. Options are \"ide\" and \"sata\"."
+  description = "The CPU model is what will be used by qemu for booting the virtual machine and determine which features of a specific model/family of processors is supported."
   default     = null
 }
 
-variable "guest_additions_path" {
-  type        = string
-  description = "The path on the guest virtual machine where the VirtualBox guest additions ISO will be uploaded. By default this is VBoxGuestAdditions.iso which should upload into the login directory of the user. This is a configuration template where the Version variable is replaced with the VirtualBox version."
-  default     = null
-}
-
-variable "guest_additions_sha256" {
-  type        = string
-  description = "The SHA256 checksum of the guest additions ISO that will be uploaded to the guest VM. By default the checksums will be downloaded from the VirtualBox website, so this only needs to be set if you want to be explicit about the checksum."
-  default     = null
-}
-
-variable "guest_additions_url" {
-  type        = string
-  description = "The URL of the guest additions ISO to upload. This can also be a file URL if the ISO is at a local path. By default, the VirtualBox builder will attempt to find the guest additions ISO on the local file system. If it is not available locally, the builder will download the proper guest additions ISO from the internet."
-  default     = null
-}
-
-## ISO Configuration
+# ISO Configuration
 
 variable "iso_checksum" {
   type        = string
-  description = "The checksum for the ISO file or virtual hard drive file. The type of the checksum is specified within the checksum field as a prefix, ex: \"md5:{$checksum}\". The type of the checksum can also be omitted and Packer will try to infer it based on string length. Valid values are \"none\", \"{$checksum}\", \"md5:{$checksum}\", \"sha1:{$checksum}\", \"sha256:{$checksum}\", \"sha512:{$checksum}\" or \"file:{$path}\". Although the checksum will not be verified when it is set to \"none\", this is not recommended since these files can be very large and corruption does happen from time to time."
+  description = "The checksum for the ISO file or virtual hard drive file. The type of the checksum is specified within the checksum field as a prefix, ex: \"md5:{$checksum}\". The type of the checksum can also be omitted and Packer will try to infer it based on string length. Valid values are \"none\", \"{$checksum}\", \"md5:{$checksum}\", \"sha1:{$checksum}\", \"sha256:{$checksum}\", \"sha512:{$checksum}\" or \"file:{$path}\"."
 }
 
 variable "iso_url" {
@@ -198,137 +277,25 @@ variable "iso_target_extension" {
   default     = null
 }
 
-## Export Configuration
-
-variable "format" {
-  type        = string
-  description = "Either ovf or ova, this specifies the output format of the exported virtual machine. This defaults to ovf."
-  default     = null
-}
-
-variable "export_opts" {
-  type        = list(string)
-  description = "Additional options to pass to the VBoxManage export. This can be useful for passing product information to include in the resulting appliance file."
-  default     = null
-}
-
-## Output Configuration
-
-variable "output_directory" {
-  type        = string
-  description = "This is the path to the directory where the resulting virtual machine will be created. This may be relative or absolute. If relative, the path is relative to the working directory when packer is executed. This directory must not exist or be empty prior to running the builder. By default this is output-BUILDNAME where \"BUILDNAME\" is the name of the build."
-  default     = null
-}
-
-variable "output_filename" {
-  type        = string
-  description = "This is the base name of the file (excluding the file extension) where the resulting virtual machine will be created. By default this is the vm_name."
-  default     = null
-}
-
-## Run configuration
-
-variable "headless" {
-  type        = bool
-  description = "Packer defaults to building VirtualBox virtual machines by launching a GUI that shows the console of the machine being built. When this value is set to true, the machine will start without a console."
-  default     = null
-}
-
-variable "vrdp_bind_address" {
-  type        = string
-  description = "The IP address that should be binded to for VRDP. By default packer will use 127.0.0.1 for this. If you wish to bind to all interfaces use 0.0.0.0."
-  default     = null
-}
-
-variable "vrdp_port_min" {
-  type        = number
-  description = "The minimum and maximum port to use for VRDP access to the virtual machine. Packer uses a randomly chosen port in this range that appears available. By default this is 5900 to 6000. The minimum and maximum ports are inclusive."
-  default     = null
-}
-
-variable "vrdp_port_max" {
-  type        = number
-  description = "VRDP Port Max"
-  default     = null
-}
-
-## Shutdown configuration
+# Shutdown configuration
 
 variable "shutdown_timeout" {
   type        = string
-  description = "The amount of time to wait after executing the shutdown_command for the virtual machine to actually shut down. If it doesn't shut down in this time, it is an error. By default, the timeout is 5m or five minutes. ex: \"1h5m2s\"."
+  description = "The amount of time to wait after executing the shutdown_command for the virtual machine to actually shut down. If the machine doesn't shut down in this time it is considered an error. Example: \"1h5m2s\". By default, the time out is \"5m\" (five minutes)."
   default     = null
 }
 
-variable "post_shutdown_delay" {
-  type        = string
-  description = "The amount of time to wait after shutting down the virtual machine. If you get the error Error removing floppy controller, you might need to set this to 5m or so. By default, the delay is 0s or disabled. ex: \"1h5m2s\"."
-  default     = null
-}
-
-variable "disable_shutdown" {
-  type        = bool
-  description = "Packer normally halts the virtual machine after all provisioners have run when no shutdown_command is defined. If this is set to true, Packer will not halt the virtual machine but will assume that you will send the stop signal yourself through the preseed.cfg or your final provisioner. Packer will wait for a default of 5 minutes until the virtual machine is shutdown. The timeout can be changed using shutdown_timeout option."
-  default     = null
-}
-
-variable "acpi_shutdown" {
-  type        = bool
-  description = "If it's set to true, it will shutdown the VM via power button. It could be a good option when keeping the machine state is necessary after shutting it down."
-  default     = null
-}
-
-## Hardware configuration
-
-variable "cpus" {
-  type        = number
-  description = "The number of cpus to use for building the VM. Defaults to 1."
-  default     = null
-}
-
-variable "memory" {
-  type        = number
-  description = "The amount of memory to use for building the VM in megabytes. Defaults to 512 megabytes."
-  default     = null
-}
-
-variable "sound" {
-  type        = string
-  description = "Defaults to none. The type of audio device to use for sound when building the VM. Some of the options that are available are dsound, oss, alsa, pulse, coreaudio, null."
-  default     = null
-}
-
-variable "usb" {
-  type        = bool
-  description = "Specifies whether or not to enable the USB bus when building the VM. Defaults to false."
-  default     = null
-}
-
-## VBox Manage configuration
-
-variable "vboxmanage" {
-  type        = list(list(string))
-  description = "Custom VBoxManage commands to execute in order to further customize the virtual machine being created."
-  default     = null
-}
-
-variable "vboxmanage_post" {
-  type        = list(list(string))
-  description = "Identical to vboxmanage, except that it is run after the virtual machine is shutdown, and before the virtual machine is exported."
-  default     = null
-}
-
-## Communicator configuration
+# Communicator configuration
 
 variable "communicator" {
   type        = string
-  description = "Packer currently supports three kinds of communicators: \"none\" - No communicator will be used. If this is set, most provisioners also can't be used. \"ssh\" - An SSH connection will be established to the machine. This is usually the default. \"winrm\" - A WinRM connection will be established."
+  description = "Packer currently supports three kinds of communicators: \"none\" - No communicator will be used. If this is set, most provisioners also can't be used. \"ssh\" - An SSH connection will be established to the machine. This is usually the default. \"winrm\" - A WinRM connection will be established. In addition, some builders have custom communicators they can use. For example, the Docker builder has a \"docker\" communicator that uses docker exec and docker cp to execute scripts and copy files."
   default     = null
 }
 
 variable "pause_before_connecting" {
   type        = string
-  description = "We recommend that you enable SSH or WinRM as the very last step in your guest's bootstrap script, but sometimes you may have a race condition where you need Packer to wait before attempting to connect to your guest. If you end up in this situation, you can use the template option pause_before_connecting. By default, there is no pause. For example if you set pause_before_connecting to 10m Packer will check whether it can connect, as normal. But once a connection attempt is successful, it will disconnect and then wait 10 minutes before connecting to the guest and beginning provisioning. ex: \"1h5m2s\""
+  description = "We recommend that you enable SSH or WinRM as the very last step in your guest's bootstrap script, but sometimes you may have a race condition where you need Packer to wait before attempting to connect to your guest. Example: \"1h5m2s\"."
   default     = null
 }
 
@@ -349,8 +316,6 @@ variable "skip_nat_mapping" {
   description = "Defaults to false. When enabled, Packer does not setup forwarded port mapping for communicator (SSH or WinRM) requests and uses ssh_port or winrm_port on the host to communicate to the virtual machine."
   default     = null
 }
-
-## SSH
 
 variable "ssh_host" {
   type        = string
@@ -378,7 +343,7 @@ variable "ssh_password" {
 
 variable "ssh_ciphers" {
   type        = list(string)
-  description = "This overrides the value of ciphers supported by default by Golang. The default value is [ \"aes128-gcm@openssh.com\", \"chacha20-poly1305@openssh.com\", \"aes128-ctr\", \"aes192-ctr\", \"aes256-ctr\",]. Valid options for ciphers include: \"aes128-ctr\", \"aes192-ctr\", \"aes256-ctr\", \"aes128-gcm@openssh.com\", \"chacha20-poly1305@openssh.com\", \"arcfour256\", \"arcfour128\", \"arcfour\", \"aes128-cbc\", \"3des-cbc\","
+  description = "This overrides the value of ciphers supported by default by Golang. The default value is [ \"aes128-gcm@openssh.com\", \"chacha20-poly1305@openssh.com\", \"aes128-ctr\", \"aes192-ctr\", \"aes256-ctr\", ]"
   default     = null
 }
 
@@ -408,7 +373,7 @@ variable "ssh_pty" {
 
 variable "ssh_timeout" {
   type        = string
-  description = "The time to wait for SSH to become available. Packer uses this to determine when the machine has booted so this is usually quite long. Example value: 10m. This defaults to 5m, unless ssh_handshake_attempts is set. ex: \"1h5m2s\""
+  description = "The time to wait for SSH to become available. Packer uses this to determine when the machine has booted so this is usually quite long. Example value: 10m. This defaults to 5m, unless ssh_handshake_attempts is set."
   default     = null
 }
 
@@ -474,7 +439,7 @@ variable "ssh_bastion_certificate_file" {
 
 variable "ssh_file_transfer_method" {
   type        = string
-  description = "scp or sftp - How to transfer files, Secure copy (default) or SSH File Transfer Protocol. NOTE: Guests using Windows with Win32-OpenSSH v9.1.0.0p1-Beta, scp (the default protocol for copying data) returns a a non-zero error code since the MOTW cannot be set, which cause any file transfer to fail. As a workaround you can override the transfer protocol with SFTP instead ssh_file_transfer_protocol = \"sftp\"."
+  description = "scp or sftp - How to transfer files, Secure copy (default) or SSH File Transfer Protocol."
   default     = null
 }
 
@@ -504,13 +469,13 @@ variable "ssh_proxy_password" {
 
 variable "ssh_keep_alive_interval" {
   type        = string
-  description = "How often to send \"keep alive\" messages to the server. Set to a negative value (-1s) to disable. ex: \"1h5m2s\" Example value: 10s. Defaults to 5s."
+  description = "How often to send \"keep alive\" messages to the server. Set to a negative value (-1s) to disable. Example value: 10s. Defaults to 5s."
   default     = null
 }
 
 variable "ssh_read_write_timeout" {
   type        = string
-  description = "The amount of time to wait for a remote command to end. This might be useful if, for example, packer hangs on a connection after a reboot. ex: \"1h5m2s\" Example: 5m. Disabled by default."
+  description = "The amount of time to wait for a remote command to end. This might be useful if, for example, packer hangs on a connection after a reboot. Example: 5m. Disabled by default."
   default     = null
 }
 
@@ -532,14 +497,6 @@ variable "ssh_private_key_file" {
   default     = null
 }
 
-variable "ssh_agent_auth" {
-  type        = bool
-  description = "If true, the local SSH agent will be used to authenticate connections to the source instance. No temporary keypair will be created, and the values of ssh_password and ssh_private_key_file will be ignored. The environment variable SSH_AUTH_SOCK must be set for this option to work properly."
-  default     = null
-}
-
-## WinRM
-
 variable "winrm_username" {
   type        = string
   description = "The username to use to connect to WinRM."
@@ -554,7 +511,7 @@ variable "winrm_password" {
 
 variable "winrm_host" {
   type        = string
-  description = "The address for WinRM to connect to. NOTE: If using an Amazon EBS builder, you can specify the interface WinRM connects to via ssh_interface."
+  description = "The address for WinRM to connect to."
   default     = null
 }
 
@@ -572,7 +529,7 @@ variable "winrm_port" {
 
 variable "winrm_timeout" {
   type        = string
-  description = "The amount of time to wait for WinRM to become available. This defaults to 30m since setting up a Windows machine generally takes a long time.  ex: \"1h5m2s\""
+  description = "The amount of time to wait for WinRM to become available. This defaults to 30m since setting up a Windows machine generally takes a long time."
   default     = null
 }
 
@@ -594,36 +551,110 @@ variable "winrm_use_ntlm" {
   default     = null
 }
 
-## Boot Configuration
+# Boot Configuration
+
+variable "disable_vnc" {
+  type        = bool
+  description = "Whether to create a VNC connection or not. A boot_command cannot be used when this is true. Defaults to false."
+  default     = null
+}
+
+variable "boot_key_interval" {
+  type        = string
+  description = "Time in ms to wait between each key press"
+  default     = null
+}
 
 variable "boot_keygroup_interval" {
   type        = string
-  description = "Time to wait after sending a group of key pressses. The value of this should be a duration. Examples are 5s and 1m30s which will cause Packer to wait five seconds and one minute 30 seconds, respectively. If this isn't specified, a sensible default value is picked depending on the builder type. ex: \"1h5m2s\""
+  description = "Time to wait after sending a group of key pressses. The value of this should be a duration. Examples are 5s and 1m30s which will cause Packer to wait five seconds and one minute 30 seconds, respectively. If this isn't specified, a sensible default value is picked depending on the builder type."
   default     = null
 }
 
 variable "boot_wait" {
   type        = string
-  description = "The time to wait after booting the initial virtual machine before typing the boot_command. The value of this should be a duration. Examples are 5s and 1m30s which will cause Packer to wait five seconds and one minute 30 seconds, respectively. If this isn't specified, the default is 10s or 10 seconds. To set boot_wait to 0s, use a negative number, such as \"-1s\". ex: \"1h5m2s\""
+  description = "The time to wait after booting the initial virtual machine before typing the boot_command. The value of this should be a duration. Examples are 5s and 1m30s which will cause Packer to wait five seconds and one minute 30 seconds, respectively. If this isn't specified, the default is 10s or 10 seconds. To set boot_wait to 0s, use a negative number, such as \"-1s\""
   default     = null
 }
 
-## Guest OS Configuration
+variable "boot_command" {
+  type        = list(string)
+  description = "This is an array of commands to type when the virtual machine is first booted. The goal of these commands should be to type just enough to initialize the operating system installer. Special keys can be typed as well, and are covered in the section below on the boot command. If this is not specified, it is assumed the installer will start itself."
+  default = [
+    "e<down><down><down><end>",
+    " autoinstall ds=nocloud;",
+    "<F10>"
+  ]
+}
+
+# EFI Boot Configuration
+
+variable "efi_boot" {
+  type        = bool
+  description = "Boot in EFI mode instead of BIOS. This is required for more modern guest OS. If either or both of efi_firmware_code or efi_firmware_vars are defined, this will implicitely be set to true."
+  default     = null
+}
+
+variable "efi_firmware_code" {
+  type        = string
+  description = "Path to the CODE part of OVMF (or other compatible firmwares) The OVMF_CODE.fd file contains the bootstrap code for booting in EFI mode, and requires a separate VARS.fd file to be able to persist data between boot cycles."
+  default     = null
+}
+
+variable "efi_firmware_vars" {
+  type        = string
+  description = "Path to the VARS corresponding to the OVMF code file."
+  default     = null
+}
+
+variable "efi_drop_efivars" {
+  type        = bool
+  description = "Drop the efivars.fd file in the exported artifact."
+  default     = null
+}
+
+# SMP Configuration
+
+variable "cpus" {
+  type        = number
+  description = "The number of virtual cpus to use when building the VM."
+  default     = null
+}
+
+variable "sockets" {
+  type        = number
+  description = "The number of sockets to use when building the VM. The default is 1 socket. The socket count must not be higher than the CPU count."
+  default     = null
+}
+
+variable "cores" {
+  type        = number
+  description = "The number of cores per CPU to use when building the VM. The default is 1 core per CPU."
+  default     = null
+}
+
+variable "threads" {
+  type        = number
+  description = "The number of threads per core to use when building the VM. The default is 1 thread per core."
+  default     = null
+}
+
+# Guest OS Configuration
 
 variable "guest_timezone" {
-  type = string
+  type        = string
   description = "The timezone for the installed guest operating system"
-  default = "UTC"
+  default     = "UTC"
 }
 
 variable "guest_locale" {
-  type = string
+  type        = string
   description = "The locale for the installed guest operating system"
-  default = "en_US.UTF-8"
+  default     = "en_US.UTF-8"
 }
 
 variable "guest_keyboard_layout" {
-  type = string
+  type        = string
   description = "The keyboard layout for the installed guest operating system"
-  default = "us"
+  default     = "us"
 }
