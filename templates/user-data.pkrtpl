@@ -24,3 +24,6 @@ autoinstall:
   timezone: '${guest_timezone}'
   updates: all
   shutdown: reboot
+  late-commands:
+    - curtin in-target --target=/target -- systemctl enable qemu-guest-agent
+    # - curtin in-target --target=/target -- ln -s /dev/null /etc/systemd/network/99-default.link
