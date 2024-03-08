@@ -136,7 +136,11 @@ source "qemu" "ubuntu2204" {
   boot_key_interval      = var.boot_key_interval
   boot_keygroup_interval = var.boot_keygroup_interval
   boot_wait              = var.boot_wait
-  boot_command           = var.boot_command
+  boot_command           = [
+    "e<down><down><down><end>",
+    " net.ifnames=0 autoinstall ds=nocloud;",
+    "<F10>"
+  ]
 
   # EFI Boot Configuration
 

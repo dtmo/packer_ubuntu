@@ -577,16 +577,6 @@ variable "boot_wait" {
   default     = null
 }
 
-variable "boot_command" {
-  type        = list(string)
-  description = "This is an array of commands to type when the virtual machine is first booted. The goal of these commands should be to type just enough to initialize the operating system installer. Special keys can be typed as well, and are covered in the section below on the boot command. If this is not specified, it is assumed the installer will start itself."
-  default = [
-    "e<down><down><down><end>",
-    " autoinstall ds=nocloud;",
-    "<F10>"
-  ]
-}
-
 # EFI Boot Configuration
 
 variable "efi_boot" {

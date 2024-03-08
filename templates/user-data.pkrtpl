@@ -13,7 +13,7 @@ autoinstall:
     layout:
       name: direct
   identity:
-    hostname: ubuntu-workstation
+    hostname: ubuntu
     username: '${username}'
     password: '${bcrypt(password)}'
   ssh:
