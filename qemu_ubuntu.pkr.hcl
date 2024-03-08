@@ -166,7 +166,8 @@ build {
     inline = [
       "apt-get remove -y open-vm-tools",
       "apt-get autoremove -y",
-      "cloud-init clean --logs --machine-id"
+      // "cloud-init clean --logs --machine-id",
+      "echo uninitialized > /etc/machine-id"
     ]
   }
 }
