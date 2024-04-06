@@ -1,9 +1,8 @@
 
 disk_size = "50G"
 
-// List available machine types with `qemu-system-x86_64 -machine ?`
-// machine_type = "pc-q35-jammy"
-machine_type = "pc-i440fx-jammy"
+// List available machine types with `qemu-system-x86_64 -machine help`
+machine_type = "pc-q35-jammy"
 
 memory = 4096
 
@@ -13,8 +12,6 @@ iso_checksum = "sha256:45f873de9f8cb637345d6e66a583762730bbea30277ef7b32c9c3bd67
 ssh_username = "ubuntu"
 ssh_password = "ubuntu"
 ssh_timeout  = "60m"
-
-efi_boot = true
 
 cpus = 2
 
