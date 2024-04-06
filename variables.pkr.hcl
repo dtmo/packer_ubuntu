@@ -316,11 +316,6 @@ variable "skip_nat_mapping" {
   default     = null
 }
 
-variable "ssh_host" {
-  type        = string
-  description = "The address to SSH to. This usually is automatically configured by the builder."
-  default     = null
-}
 
 variable "ssh_port" {
   type        = number
@@ -493,61 +488,7 @@ variable "ssh_local_tunnels" {
 variable "ssh_private_key_file" {
   type        = string
   description = "Path to a PEM encoded private key file to use to authenticate with SSH. The ~ can be used in path and will be expanded to the home directory of current user."
-  default     = null
-}
-
-variable "winrm_username" {
-  type        = string
-  description = "The username to use to connect to WinRM."
-  default     = null
-}
-
-variable "winrm_password" {
-  type        = string
-  description = "The password to use to connect to WinRM."
-  default     = null
-}
-
-variable "winrm_host" {
-  type        = string
-  description = "The address for WinRM to connect to."
-  default     = null
-}
-
-variable "winrm_no_proxy" {
-  type        = bool
-  description = "Setting this to true adds the remote host:port to the NO_PROXY environment variable. This has the effect of bypassing any configured proxies when connecting to the remote host. Default to false."
-  default     = null
-}
-
-variable "winrm_port" {
-  type        = number
-  description = "The WinRM port to connect to. This defaults to 5985 for plain unencrypted connection and 5986 for SSL when winrm_use_ssl is set to true."
-  default     = null
-}
-
-variable "winrm_timeout" {
-  type        = string
-  description = "The amount of time to wait for WinRM to become available. This defaults to 30m since setting up a Windows machine generally takes a long time."
-  default     = null
-}
-
-variable "winrm_use_ssl" {
-  type        = bool
-  description = "If true, use HTTPS for WinRM."
-  default     = null
-}
-
-variable "winrm_insecure" {
-  type        = bool
-  description = "If true, do not check server certificate chain and host name."
-  default     = null
-}
-
-variable "winrm_use_ntlm" {
-  type        = bool
-  description = "If true, NTLMv2 authentication (with session security) will be used for WinRM, rather than default (basic authentication), removing the requirement for basic authentication to be enabled within the target guest. Further reading for remote connection authentication can be found here."
-  default     = null
+  default     = "${env("HOME")}/.ssh/id_ed25519"
 }
 
 # Boot Configuration

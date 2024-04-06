@@ -18,12 +18,10 @@ autoinstall:
     password: '${bcrypt(password)}'
   ssh:
     install-server: true
-    allow-pw: true
+    authorized-keys:
+      - '${ssh_public_key}'
   packages:
     - qemu-guest-agent
   timezone: '${guest_timezone}'
   updates: all
   shutdown: reboot
-  late-commands:
-    - curtin in-target --target=/target -- systemctl enable qemu-guest-agent
-    # - curtin in-target --target=/target -- ln -s /dev/null /etc/systemd/network/99-default.link

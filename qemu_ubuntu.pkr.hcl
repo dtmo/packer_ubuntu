@@ -74,6 +74,7 @@ source "qemu" "ubuntu2204" {
       guest_timezone        = var.guest_timezone
       guest_locale          = var.guest_locale
       guest_keyboard_layout = var.guest_keyboard_layout
+      ssh_public_key        = file("${var.ssh_private_key_file}.pub")
     })
   }
   cd_label = "CIDATA"
@@ -90,7 +91,6 @@ source "qemu" "ubuntu2204" {
   host_port_min                = var.host_port_min
   host_port_max                = var.host_port_max
   skip_nat_mapping             = var.skip_nat_mapping
-  ssh_host                     = var.ssh_host
   ssh_port                     = var.ssh_port
   ssh_username                 = var.ssh_username
   ssh_password                 = var.ssh_password
@@ -120,15 +120,6 @@ source "qemu" "ubuntu2204" {
   ssh_remote_tunnels           = var.ssh_remote_tunnels
   ssh_local_tunnels            = var.ssh_local_tunnels
   ssh_private_key_file         = var.ssh_private_key_file
-  winrm_username               = var.winrm_username
-  winrm_password               = var.winrm_password
-  winrm_host                   = var.winrm_host
-  winrm_no_proxy               = var.winrm_no_proxy
-  winrm_port                   = var.winrm_port
-  winrm_timeout                = var.winrm_timeout
-  winrm_use_ssl                = var.winrm_use_ssl
-  winrm_insecure               = var.winrm_insecure
-  winrm_use_ntlm               = var.winrm_use_ntlm
 
   # Boot Configuration
 
@@ -136,7 +127,7 @@ source "qemu" "ubuntu2204" {
   boot_key_interval      = var.boot_key_interval
   boot_keygroup_interval = var.boot_keygroup_interval
   boot_wait              = var.boot_wait
-  boot_command           = [
+  boot_command = [
     "e<down><down><down><end>",
     " net.ifnames=0 autoinstall ds=nocloud;",
     "<F10>"
@@ -162,12 +153,11 @@ build {
 
   provisioner "shell" {
     execute_command = "chmod +x {{ .Path }}; echo '${var.ssh_password}' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
-    inline_shebang = "/bin/bash -ex"
+    inline_shebang  = "/bin/bash -ex"
     inline = [
       "apt-get remove -y open-vm-tools",
       "apt-get autoremove -y",
-      // "cloud-init clean --logs --machine-id",
-      "echo uninitialized > /etc/machine-id"
+      "cloud-init clean --logs --machine-id",
     ]
   }
 }
