@@ -1,13 +1,14 @@
+accelerator = "kvm"
 
 disk_size = "50G"
 
 // List available machine types with `qemu-system-x86_64 -machine help`
-machine_type = "pc-q35-jammy"
+machine_type = "q35"
 
 memory = 4096
 
-iso_url      = "https://releases.ubuntu.com/22.04.4/ubuntu-22.04.4-live-server-amd64.iso"
-iso_checksum = "sha256:45f873de9f8cb637345d6e66a583762730bbea30277ef7b32c9c3bd6700a32b2"
+iso_url      = "https://releases.ubuntu.com/24.04/ubuntu-24.04.1-live-server-amd64.iso"
+iso_checksum = "file:https://releases.ubuntu.com/24.04/SHA256SUMS"
 
 ssh_username = "ubuntu"
 ssh_password = "ubuntu"

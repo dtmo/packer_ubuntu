@@ -7,7 +7,7 @@ packer {
   }
 }
 
-source "qemu" "ubuntu2204" {
+source "qemu" "ubuntu2404" {
   # Qemu Specific Configuration
 
   iso_skip_cache       = var.iso_skip_cache
@@ -33,9 +33,6 @@ source "qemu" "ubuntu2204" {
   net_bridge           = var.net_bridge
   output_directory     = var.output_directory
   qemuargs             = var.qemuargs
-
-  qemu_img_args {
-  }
 
   qemu_binary         = var.qemu_binary
   qmp_enable          = var.qmp_enable
@@ -81,7 +78,7 @@ source "qemu" "ubuntu2204" {
 
   # Shutdown configuration
 
-  shutdown_command = "echo ${var.ssh_password} | sudo -S shutdown -P now"
+  shutdown_command = "echo ${var.ssh_password} | sudo -S bash $XDG_RUNTIME_DIR/shutdown.sh"
   shutdown_timeout = var.shutdown_timeout
 
   # Communicator configuration
@@ -149,7 +146,7 @@ source "qemu" "ubuntu2204" {
 }
 
 build {
-  sources = ["source.qemu.ubuntu2204"]
+  sources = ["source.qemu.ubuntu2404"]
 
   provisioner "shell" {
     execute_command = "chmod +x {{ .Path }}; echo '${var.ssh_password}' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
@@ -157,7 +154,14 @@ build {
     inline = [
       "apt-get remove -y open-vm-tools",
       "apt-get autoremove -y",
-      "cloud-init clean --logs --machine-id",
+      "cloud-init clean --logs --machine-id --seed --configs all",
     ]
+  }
+
+  provisioner "file" {
+    content = templatefile("${path.root}/scripts/shutdown.sh", {
+      ssh_username = var.ssh_username
+    })
+    destination = "$XDG_RUNTIME_DIR/shutdown.sh"
   }
 }
