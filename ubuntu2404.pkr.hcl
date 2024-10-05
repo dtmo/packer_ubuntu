@@ -63,9 +63,9 @@ source "qemu" "ubuntu2404" {
   # CD configuration
 
   cd_content = {
-    "meta-data" = templatefile("${path.root}/templates/meta-data.pkrtpl", {
+    "meta-data" = templatefile("${path.root}/templates/meta-data.pkrtpl.hcl", {
     })
-    "user-data" = templatefile("${path.root}/templates/user-data.pkrtpl", {
+    "user-data" = templatefile("${path.root}/templates/user-data.pkrtpl.hcl", {
       username              = var.ssh_username
       password              = var.ssh_password
       guest_timezone        = var.guest_timezone
@@ -154,14 +154,11 @@ build {
     inline = [
       "apt-get remove -y open-vm-tools",
       "apt-get autoremove -y",
-      "cloud-init clean --logs --machine-id --seed --configs all",
     ]
   }
 
   provisioner "file" {
-    content = templatefile("${path.root}/scripts/shutdown.sh", {
-      ssh_username = var.ssh_username
-    })
+    source = "${path.root}/scripts/shutdown.sh"
     destination = "$XDG_RUNTIME_DIR/shutdown.sh"
   }
 }

@@ -580,11 +580,10 @@ variable "guest_timezone" {
 variable "guest_locale" {
   type        = string
   description = "The locale for the installed guest operating system"
-  default     = "en_US.UTF-8"
+  default     = env("LANG")
 }
 
 variable "guest_keyboard_layout" {
   type        = string
   description = "The keyboard layout for the installed guest operating system"
-  default     = "us"
 }
