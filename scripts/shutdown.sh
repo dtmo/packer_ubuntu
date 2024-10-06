@@ -1,8 +1,13 @@
 #!/bin/bash
 set -eo pipefail
 
-userdel --force --remove "$(logname)" || true
-userdel --force --remove "$(cloud-init query system_info.default_user.name)" || true
+if getent passwd "$(logname)"; then
+    userdel --force --remove "$(logname)"
+fi
+
+if getent passwd "$(cloud-init query system_info.default_user.name)"; then
+    userdel --force --remove "$(cloud-init query system_info.default_user.name)"
+fi
 
 cloud-init clean --logs --machine-id --seed --configs all
 
