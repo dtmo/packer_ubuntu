@@ -10,8 +10,8 @@ memory = 4096
 iso_url      = "https://releases.ubuntu.com/24.04/ubuntu-24.04.1-live-server-amd64.iso"
 iso_checksum = "file:https://releases.ubuntu.com/24.04/SHA256SUMS"
 
-ssh_username = "ubuntu"
-ssh_password = "ubuntu"
+ssh_username = "packer"
+ssh_password = "packer"
 ssh_timeout  = "60m"
 
 cpus = 2
