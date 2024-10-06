@@ -485,12 +485,6 @@ variable "ssh_local_tunnels" {
   default     = null
 }
 
-variable "ssh_private_key_file" {
-  type        = string
-  description = "Path to a PEM encoded private key file to use to authenticate with SSH. The ~ can be used in path and will be expanded to the home directory of current user."
-  default     = "${env("HOME")}/.ssh/id_ed25519"
-}
-
 # Boot Configuration
 
 variable "disable_vnc" {

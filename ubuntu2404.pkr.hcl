@@ -4,7 +4,17 @@ packer {
       version = "~> 1.1"
       source  = "github.com/hashicorp/qemu"
     }
+
+    sshkey = {
+      version = ">= 1.1.0"
+      source = "github.com/ivoronin/sshkey"
+    }
   }
+}
+
+data "sshkey" "provisioning" {
+  name = var.ssh_username
+  type = "ed25519"
 }
 
 source "qemu" "ubuntu2404" {
@@ -71,7 +81,7 @@ source "qemu" "ubuntu2404" {
       guest_timezone        = var.guest_timezone
       guest_locale          = var.guest_locale
       guest_keyboard_layout = var.guest_keyboard_layout
-      ssh_public_key        = file("${var.ssh_private_key_file}.pub")
+      ssh_public_key        = data.sshkey.provisioning.public_key
     })
   }
   cd_label = "CIDATA"
@@ -116,7 +126,7 @@ source "qemu" "ubuntu2404" {
   ssh_read_write_timeout       = var.ssh_read_write_timeout
   ssh_remote_tunnels           = var.ssh_remote_tunnels
   ssh_local_tunnels            = var.ssh_local_tunnels
-  ssh_private_key_file         = var.ssh_private_key_file
+  ssh_private_key_file         = data.sshkey.provisioning.private_key_path
 
   # Boot Configuration
 
